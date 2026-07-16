@@ -62,3 +62,41 @@ COUNT(CASE WHEN total_amount IS NULL THEN 1 END) AS qtd_null_total_amount,
 COUNT(CASE WHEN congestion_surcharge IS NULL THEN 1 END) AS qtd_null_congestion_surcharge,
 COUNT(CASE WHEN Airport_fee IS NULL THEN 1 END) AS qtd_null_Airport_fee
 FROM raw_yellow_taxi;
+
+-- =============================================================================
+-- Bloco 3: Cardinalidade  das colunas da tabela raw_yellow_taxi
+-- Descrição: Obter a cardinalidade(quantidade de valores únicos) das colunas da 
+--            tabela raw_yellow_taxi, para conseguir identificar colunas de alta e
+--            baixa cardinalidade.
+-- =============================================================================
+
+SELECT
+COUNT(DISTINCT VendorID) AS card_vendor_id,
+COUNT(DISTINCT tpep_pickup_datetime) AS card_tpep_pickup_datetime,
+COUNT(DISTINCT tpep_dropoff_datetime) AS card_tpep_dropoff_datetime,
+COUNT(DISTINCT passenger_count) AS card_passenger_count,
+COUNT(DISTINCT trip_distance) AS card_trip_distance,
+FROM raw_yellow_taxi;
+
+SELECT
+COUNT(DISTINCT RatecodeID) AS card_ratecodeID,
+COUNT(DISTINCT store_and_fwd_flag) AS card_store_and_fwd_flag,
+COUNT(DISTINCT PULocationID) AS card_PULocationID,
+COUNT(DISTINCT DOLocationID) AS card_DOLocationID,
+COUNT(DISTINCT payment_type) AS card_payment_type,
+FROM raw_yellow_taxi;
+
+SELECT
+COUNT(DISTINCT fare_amount) AS card_fare_amount,
+COUNT(DISTINCT extra) AS card_extra,
+COUNT(DISTINCT mta_tax) AS card_mta_tax,
+COUNT(DISTINCT tip_amount) AS card_tip_amount,
+COUNT(DISTINCT tolls_amount) AS card_tolls_amount,
+FROM raw_yellow_taxi;
+
+SELECT
+COUNT(DISTINCT improvement_surcharge) AS card_improvement_surcharge,
+COUNT(DISTINCT total_amount) AS card_total_amount,
+COUNT(DISTINCT congestion_surcharge) AS card_congestion_surcharge,
+COUNT(DISTINCT Airport_fee) AS card_Airport_fee
+FROM raw_yellow_taxi;
