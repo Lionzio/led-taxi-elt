@@ -100,3 +100,74 @@ COUNT(DISTINCT total_amount) AS card_total_amount,
 COUNT(DISTINCT congestion_surcharge) AS card_congestion_surcharge,
 COUNT(DISTINCT Airport_fee) AS card_Airport_fee
 FROM raw_yellow_taxi;
+
+-- =============================================================================
+-- Bloco 4: Análise da distribuição das colunas numéricas da tabela raw_yellow_taxi
+-- Descrição: Obter os valores mínimos, médios e máximos das colunas numéricas da 
+--            tabela raw_yellow_taxi, para identificar possíveis inconsistências 
+--            e outliers.
+-- Observação: A análise foi feita focando nos atributos monetários, de tempo e
+--             de distância, não sendo analisadas colunas de ID, pois julgamos 
+--             que a distribuição dos IDs não seria relevante para nossas análises
+--             de negócio. 
+-- =============================================================================
+
+SELECT
+MIN(trip_distance) AS min_trip_distance,
+AVG(trip_distance) AS avg_trip_distance,
+MAX(trip_distance) AS max_trip_distance,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(fare_amount) AS min_fare_amount,
+AVG(fare_amount) AS avg_fare_amount,
+MAX(fare_amount) AS max_fare_amount,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(extra) AS min_extra,
+AVG(extra) AS avg_extra,
+MAX(extra) AS max_extra,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(mta_tax) AS min_mta_tax,
+AVG(mta_tax) AS avg_mta_tax,
+MAX(mta_tax) AS max_mta_tax,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(tip_amount) AS min_tip_amount,
+AVG(tip_amount) AS avg_tip_amount,
+MAX(tip_amount) AS max_tip_amount,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(tolls_amount) AS min_tolls_amount,
+AVG(tolls_amount) AS avg_tolls_amount,
+MAX(tolls_amount) AS max_tolls_amount,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(improvement_surcharge) AS min_improvement_surcharge,
+AVG(improvement_surcharge) AS avg_improvement_surcharge,
+MAX(improvement_surcharge) AS max_improvement_surcharge,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(total_amount) AS min_total_amount,
+AVG(total_amount) AS avg_total_amount,
+MAX(total_amount) AS max_total_amount,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(congestion_surcharge) AS min_congestion_surcharge,
+AVG(congestion_surcharge) AS avg_congestion_surcharge,
+MAX(congestion_surcharge) AS max_congestion_surcharge,
+FROM raw_yellow_taxi;
+
+SELECT
+MIN(Airport_fee) AS min_Airport_fee,
+AVG(Airport_fee) AS avg_Airport_fee,
+MAX(Airport_fee) AS max_Airport_fee
+FROM raw_yellow_taxi;
