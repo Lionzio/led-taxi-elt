@@ -171,3 +171,19 @@ MIN(Airport_fee) AS min_Airport_fee,
 AVG(Airport_fee) AS avg_Airport_fee,
 MAX(Airport_fee) AS max_Airport_fee
 FROM raw_yellow_taxi;
+
+-- =============================================================================
+-- Bloco 5: Verificação de inconsistências nas colunas PULocationID e DOLocationID
+--          da tabela raw_yellow_taxi.
+-- Descrição: Checagem se existem valores em PULocationID e em DOLocationID que não
+--            estão presentes na tabela auxiliar raw_zone_lookup, caso existissem,
+--            isso indicaria uma possível inconsistência, dado que não teriamos as 
+--            informações de adicionais para essas localidades.
+-- =============================================================================
+
+SELECT
+COUNT(CASE WHEN PULocationID NOT IN (SELECT LocationID FROM raw_zone_lookup) 
+THEN 1 END) AS qtd_PULocation_invalid,
+COUNT(CASE WHEN DOLocationID NOT IN (SELECT LocationID FROM raw_zone_lookup) 
+THEN 1 END) AS qtd_DOLocation_invalid
+FROM raw_yellow_taxi;
