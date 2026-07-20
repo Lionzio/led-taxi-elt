@@ -187,3 +187,139 @@ THEN 1 END) AS qtd_PULocation_invalid,
 COUNT(CASE WHEN DOLocationID NOT IN (SELECT LocationID FROM raw_zone_lookup) 
 THEN 1 END) AS qtd_DOLocation_invalid
 FROM raw_yellow_taxi;
+
+-- =============================================================================
+-- Bloco 6: Investigação de duplicidades parciais
+-- Descrição: Identificar registros com a mesma chave lógica de viagem, mas 
+--            com tarifas diferentes, o que indica transações de estorno/cancelamento.
+-- =============================================================================
+
+SELECT COALESCE(SUM(qtd), 0) AS total_linhas_mesma_viagem_tarifa_diferente
+FROM (
+    SELECT COUNT(*) AS qtd
+    FROM raw_yellow_taxi
+    GROUP BY 
+        VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
+        PULocationID, DOLocationID, trip_distance, passenger_count
+    HAVING COUNT(*) > 1 
+       AND COUNT(DISTINCT total_amount) > 1
+) AS sub;
+
+SELECT 
+    VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
+    PULocationID, DOLocationID, trip_distance, passenger_count,
+    COUNT(*) AS quantidade_registros,
+    LIST(DISTINCT total_amount) AS tarifas_diferentes
+FROM raw_yellow_taxi
+GROUP BY 
+    VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
+    PULocationID, DOLocationID, trip_distance, passenger_count
+HAVING COUNT(*) > 1 
+   AND COUNT(DISTINCT total_amount) > 1
+ORDER BY quantidade_registros DESC
+LIMIT 10;
+
+-- =============================================================================
+-- Bloco 7: Verificação de aderência ao Dicionário de Dados
+-- Descrição: Validar a distribuição dos dados categóricos principais.
+-- =============================================================================
+
+-- Distribuição de VendorID
+SELECT 
+    CASE WHEN VendorID IS NULL THEN 'NULL' ELSE CAST(VendorID AS VARCHAR) END AS VendorID_str,
+    COUNT(*) AS quantidade
+FROM raw_yellow_taxi
+GROUP BY VendorID
+ORDER BY VendorID NULLS FIRST;
+
+
+
+-- Distribuição de RatecodeID
+SELECT 
+    CASE WHEN RatecodeID IS NULL THEN 'NULL' ELSE CAST(RatecodeID AS VARCHAR) END AS RatecodeID_str,
+    COUNT(*) AS quantidade
+FROM raw_yellow_taxi
+GROUP BY RatecodeID
+ORDER BY RatecodeID NULLS FIRST;
+
+
+-- Distribuição de payment_type
+SELECT 
+    CASE WHEN payment_type IS NULL THEN 'NULL' ELSE CAST(payment_type AS VARCHAR) END AS payment_type_str,
+    COUNT(*) AS quantidade
+FROM raw_yellow_taxi
+GROUP BY payment_type
+ORDER BY payment_type NULLS FIRST;
+
+-- =============================================================================
+-- Bloco 8: Análise de escopo temporal
+-- Descrição: Identificar viagens cujas datas de embarque estão fora do 
+--            período alvo da análise (Janeiro de 2024).
+-- =============================================================================
+
+SELECT COUNT(*) AS total_fora_jan2024
+FROM raw_yellow_taxi 
+WHERE tpep_pickup_datetime < '2024-01-01' 
+   OR tpep_pickup_datetime >= '2024-02-01';
+
+SELECT 
+    MIN(tpep_pickup_datetime) AS menor_data_fora_jan2024,
+    MAX(tpep_pickup_datetime) AS maior_data_fora_jan2024
+FROM raw_yellow_taxi 
+WHERE tpep_pickup_datetime < '2024-01-01' 
+   OR tpep_pickup_datetime >= '2024-02-01';
+
+SELECT VendorID, tpep_pickup_datetime, tpep_dropoff_datetime, trip_distance, total_amount
+FROM raw_yellow_taxi 
+WHERE tpep_pickup_datetime < '2024-01-01' 
+   OR tpep_pickup_datetime >= '2024-02-01'
+LIMIT 5;
+
+-- =============================================================================
+-- Bloco 9: Análise aprofundada de anomalias (Outliers)
+-- Descrição: Detalhamento estatístico e agrupamento em faixas (buckets) de 
+--            Distância e Tarifa para apoiar a definição de regras de rejeição.
+-- =============================================================================
+
+-- Estatísticas adicionais de Distância (Milhas)
+SELECT 
+    MIN(trip_distance) AS minimo,
+    MAX(trip_distance) AS maximo,
+    AVG(trip_distance) AS media,
+    MEDIAN(trip_distance) AS mediana,
+    COUNT(*) FILTER (WHERE trip_distance > 1000) AS qtd_acima_1000_milhas
+FROM raw_yellow_taxi;
+
+SELECT VendorID, tpep_pickup_datetime, tpep_dropoff_datetime, trip_distance, total_amount
+FROM raw_yellow_taxi 
+ORDER BY trip_distance DESC 
+LIMIT 10;
+
+-- Faixas (Buckets) de Distância
+SELECT 
+    COUNT(*) FILTER (WHERE trip_distance > 50 AND trip_distance <= 100) AS dist_50_a_100,
+    COUNT(*) FILTER (WHERE trip_distance > 100 AND trip_distance <= 300) AS dist_100_a_300,
+    COUNT(*) FILTER (WHERE trip_distance > 300 AND trip_distance <= 1000) AS dist_300_a_1000,
+    COUNT(*) FILTER (WHERE trip_distance > 1000) AS dist_acima_1000
+FROM raw_yellow_taxi;
+
+-- Estatísticas adicionais de Valores (Dólares)
+SELECT 
+    MIN(total_amount) AS minimo,
+    MAX(total_amount) AS maximo,
+    AVG(total_amount) AS media,
+    MEDIAN(total_amount) AS mediana,
+    COUNT(*) FILTER (WHERE total_amount > 500) AS qtd_acima_500_dolares
+FROM raw_yellow_taxi;
+
+SELECT VendorID, tpep_pickup_datetime, tpep_dropoff_datetime, trip_distance, total_amount
+FROM raw_yellow_taxi 
+ORDER BY total_amount DESC 
+LIMIT 10;
+
+-- Faixas (Buckets) de Valores Pagos
+SELECT 
+    COUNT(*) FILTER (WHERE total_amount > 200 AND total_amount <= 400) AS valor_200_a_400,
+    COUNT(*) FILTER (WHERE total_amount > 400 AND total_amount <= 1000) AS valor_400_a_1000,
+    COUNT(*) FILTER (WHERE total_amount > 1000) AS valor_acima_1000
+FROM raw_yellow_taxi;
