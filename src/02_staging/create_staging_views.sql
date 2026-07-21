@@ -4,8 +4,6 @@
 -- Descrição: Tratamento de tipagem segura e isolamento de registros corrompidos.
 -- =============================================================================
 
-DROP TABLE IF EXISTS rejected_records;
-
 -- =============================================================================
 -- Bloco 1: Auditoria Ativa (Criação da tabela rejected_records)
 -- Descrição: Isolar e registrar anomalias baseadas nas descobertas do profiling,
@@ -16,11 +14,31 @@ DROP TABLE IF EXISTS rejected_records;
 --             Foi utilizada uma estrutura de CASE WHEN para aplicar as regras 
 --             de forma mais clara em uma única leitura da tabela, evitando 
 --             também a duplicação de registros rejeitados por múltiplos motivos.
+--             A pseudocoluna `rowid` do DuckDB é capturada como `raw_rowid` para
+--             garantir uma chave de exclusão inequívoca na view stg_yellow_taxi,
+--             eliminando o risco de falsos positivos causados por colisão de
+--             chave parcial (VendorID + datetimes + total_amount).
+--
+-- ALERTA TÉCNICO — rowid no DuckDB:
+--   O `rowid` é estável para tabelas estáticas dentro de uma mesma sessão e
+--   entre sessões subsequentes, desde que a tabela não seja mutada (DELETE,
+--   UPDATE) nem reconstruída (DROP + CREATE). Se raw_yellow_taxi for
+--   recriada em uma execução futura sem que rejected_records seja igualmente
+--   recriada a partir do novo estado da tabela, os valores de raw_rowid
+--   armazenados em rejected_records se tornam inválidos e a lógica de
+--   exclusão da view stg_yellow_taxi passa a filtrar linhas erradas.
+--   Para este pipeline (carga única, dataset estático), o risco é nulo.
+--   Em pipelines incrementais, substituir rowid por uma chave de negócio
+--   composta e estável ou por um hash MD5 calculado sobre o conjunto completo
+--   de colunas da linha.
 -- =============================================================================
+
+DROP TABLE IF EXISTS rejected_records;
 
 CREATE TABLE rejected_records AS
 WITH regras_aplicadas AS (
     SELECT 
+        rowid AS raw_rowid,
         VendorID, 
         tpep_pickup_datetime, 
         tpep_dropoff_datetime,
@@ -67,6 +85,7 @@ WITH regras_aplicadas AS (
     FROM raw_yellow_taxi
 )
 SELECT 
+    raw_rowid,
     VendorID, 
     tpep_pickup_datetime, 
     tpep_dropoff_datetime,
@@ -84,6 +103,8 @@ WHERE rejection_reason != 'VALIDO';
 --             preservar a integridade das funções de agregação (SUM) na Sprint 7.
 --             Adicionalmente, flags nulas de armazenamento (store_and_fwd_flag) 
 --             foram padronizadas para 'Unknown' e códigos inválidos mapeados.
+--             A exclusão de registros rejeitados usa rowid NOT IN para garantia
+--             de unicidade na filtragem — ver alerta técnico no Bloco 1.
 -- =============================================================================
 CREATE OR REPLACE VIEW stg_yellow_taxi AS
 SELECT
@@ -134,14 +155,7 @@ SELECT
     TRY_CAST(total_amount AS DOUBLE) AS total_amount
 
 FROM raw_yellow_taxi
-WHERE NOT EXISTS (
-    SELECT 1 
-    FROM rejected_records rr 
-    WHERE rr.VendorID = raw_yellow_taxi.VendorID 
-      AND rr.tpep_pickup_datetime = raw_yellow_taxi.tpep_pickup_datetime
-      AND rr.tpep_dropoff_datetime = raw_yellow_taxi.tpep_dropoff_datetime
-      AND rr.total_amount = raw_yellow_taxi.total_amount 
-);
+WHERE rowid NOT IN (SELECT raw_rowid FROM rejected_records);
 
 -- =============================================================================
 -- Bloco 3: Visão Staging da Tabela de Lookup (stg_zone_lookup)
