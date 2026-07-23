@@ -39,7 +39,7 @@ SELECT DISTINCT
     YEAR(pickup_datetime) AS year,
     CASE
         WHEN MONTH(pickup_datetime) BETWEEN 1 AND 6 THEN 1
-        ELSE 2
+        WHEN MONTH(pickup_datetime) BETWEEN 7 AND 12 THEN 2
     END AS semester,
     QUARTER(pickup_datetime) AS quarter,
     MONTH(pickup_datetime) AS month,
@@ -63,3 +63,31 @@ SELECT
     FALSE AS is_weekend;
 
 DESCRIBE dim_time;
+
+-- =============================================================================
+-- Bloco 3: dim_payment
+-- Descrição: Materiaização da dimensão de pagamento(dim_payment).
+-- =============================================================================
+
+CREATE OR REPLACE TABLE dim_payment AS
+SELECT DISTINCT
+    MD5(CAST(payment_type_code AS VARCHAR)) AS payment_key,
+    payment_type_code,
+    CASE 
+        WHEN payment_type_code = 0 THEN 'Flex Fare trip'
+        WHEN payment_type_code = 1 THEN 'Credit card'
+        WHEN payment_type_code = 2 THEN 'Cash'
+        WHEN payment_type_code = 3 THEN 'No charge'
+        WHEN payment_type_code = 4 THEN 'Dispute'
+        WHEN payment_type_code = 5 THEN 'Unknown'
+        WHEN payment_type_code = 6 THEN 'Voiced trip'
+    END AS payment_description
+FROM stg_yellow_taxi
+UNION ALL
+SELECT
+    'MD5_UNKNOWN' AS payment_key,
+    -1 AS payment_type_code,
+    'UNKNOWN' AS payment_description;
+
+DESCRIBE dim_payment;
+
