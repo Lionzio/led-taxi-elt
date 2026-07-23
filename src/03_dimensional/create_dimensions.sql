@@ -10,7 +10,16 @@
 -- Descrição: Materiaização da dimensão de localização(dim_location).
 -- =============================================================================
 
-CREATE OR REPLACE TABLE dim_location AS
+CREATE OR REPLACE TABLE dim_location(
+    location_key VARCHAR,
+    location_id INT,
+    borough VARCHAR,
+    zone VARCHAR,
+    service_zone VARCHAR,
+    PRIMARY KEY (location_key)
+);
+
+INSERT INTO dim_location 
 SELECT DISTINCT
     MD5(CAST(location_id AS VARCHAR)) AS location_key,
     location_id,
@@ -32,7 +41,20 @@ DESCRIBE dim_location;
 -- Descrição: Materiaização da dimensão de tempo(dim_time).
 -- =============================================================================
 
-CREATE OR REPLACE TABLE dim_time AS
+CREATE OR REPLACE TABLE dim_time(
+    time_key VARCHAR,
+    date DATE,
+    year INT,
+    semester INT,
+    quarter INT,
+    month INT,
+    day INT,
+    day_of_week VARCHAR,
+    is_weekend BOOLEAN,
+    PRIMARY KEY (time_key)
+);
+
+INSERT INTO dim_time
 SELECT DISTINCT
     MD5(STRFTIME(CAST(pickup_datetime AS DATE), '%Y-%m-%d')) AS time_key,
     CAST(pickup_datetime AS DATE) AS date,
@@ -44,9 +66,17 @@ SELECT DISTINCT
     QUARTER(pickup_datetime) AS quarter,
     MONTH(pickup_datetime) AS month,
     DAY(pickup_datetime) AS day,
-    DAYOFWEEK(pickup_datetime) AS day_of_week,
+    CASE 
+        WHEN DAYOFWEEK(pickup_datetime) = 0 THEN 'Sunday'
+        WHEN DAYOFWEEK(pickup_datetime) = 1 THEN 'Monday'
+        WHEN DAYOFWEEK(pickup_datetime) = 2 THEN 'Tuesday'
+        WHEN DAYOFWEEK(pickup_datetime) = 3 THEN 'Wednesday'
+        WHEN DAYOFWEEK(pickup_datetime) = 4 THEN 'Thursday'
+        WHEN DAYOFWEEK(pickup_datetime) = 5 THEN 'Friday'
+        WHEN DAYOFWEEK(pickup_datetime) = 6 THEN 'Saturday'
+    END AS day_of_week,
     CASE
-        WHEN day_of_week == 0 OR day_of_week == 6 THEN TRUE
+        WHEN DAYOFWEEK(pickup_datetime) = 0 OR DAYOFWEEK(pickup_datetime) = 6 THEN TRUE
         ELSE FALSE
     END AS is_weekend
 FROM stg_yellow_taxi
@@ -59,7 +89,7 @@ SELECT
     -1 AS quarter,
     -1 AS month,
     -1 AS day,
-    -1 AS day_of_week,
+    'UNKNOWN'AS day_of_week,
     FALSE AS is_weekend;
 
 DESCRIBE dim_time;
@@ -69,7 +99,14 @@ DESCRIBE dim_time;
 -- Descrição: Materiaização da dimensão de pagamento(dim_payment).
 -- =============================================================================
 
-CREATE OR REPLACE TABLE dim_payment AS
+CREATE OR REPLACE TABLE dim_payment(
+    payment_key VARCHAR,
+    payment_type_code INT,
+    payment_description VARCHAR,
+    PRIMARY KEY(payment_key)
+);
+
+INSERT INTO dim_payment
 SELECT DISTINCT
     MD5(CAST(payment_type_code AS VARCHAR)) AS payment_key,
     payment_type_code,
@@ -90,4 +127,3 @@ SELECT
     'UNKNOWN' AS payment_description;
 
 DESCRIBE dim_payment;
-
