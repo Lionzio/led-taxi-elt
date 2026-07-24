@@ -1,13 +1,13 @@
 -- =============================================================================
 -- Camada: Dimensional - Criação da tabela fato
 -- Projeto: LED UFPE — Pipeline ELT Yellow Taxi NYC
--- Descrição: Materialização das dimensões do nosso esquema estrela, definido em
+-- Descrição: Materialização da tabela fato do nosso esquema estrela, definido em
 --            docs/adrs/0002-star-schema.md.
 -- =============================================================================
 
 -- =============================================================================
 -- Bloco 1: fact_trips
--- Descrição: Materiaização da tabela fato(fact_trips).
+-- Descrição: Materialização da tabela fato(fact_trips).
 -- =============================================================================
 
 CREATE OR REPLACE TABLE fact_trips(
