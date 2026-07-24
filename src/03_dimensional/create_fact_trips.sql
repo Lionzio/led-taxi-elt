@@ -1,13 +1,13 @@
 -- =============================================================================
--- Camada: Dimensional - Criação das dimensões
+-- Camada: Dimensional - Criação da tabela fato
 -- Projeto: LED UFPE — Pipeline ELT Yellow Taxi NYC
 -- Descrição: Materialização das dimensões do nosso esquema estrela, definido em
 --            docs/adrs/0002-star-schema.md.
 -- =============================================================================
 
 -- =============================================================================
--- Bloco 1: dim_location
--- Descrição: Materiaização da dimensão de localização(dim_location).
+-- Bloco 1: fact_trips
+-- Descrição: Materiaização da tabela fato(fact_trips).
 -- =============================================================================
 
 CREATE OR REPLACE TABLE fact_trips(
@@ -37,7 +37,9 @@ SELECT DISTINCT
         CAST(dropoff_datetime   AS VARCHAR) || '|' ||
         CAST(vendor_id          AS VARCHAR) || '|' ||
         CAST(pickup_location_id AS VARCHAR) || '|' ||
-        CAST(dropoff_location_id AS VARCHAR)
+        CAST(dropoff_location_id AS VARCHAR) || '|' ||
+        CAST(trip_distance AS VARCHAR) || '|' ||
+        CAST(passenger_count AS VARCHAR)
     ) AS trip_key,
     time.time_key,
     pickup.location_key AS pickup_location_key,
