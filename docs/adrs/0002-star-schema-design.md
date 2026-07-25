@@ -92,7 +92,9 @@ MD5(
     CAST(dropoff_datetime   AS VARCHAR) || '|' ||
     CAST(vendor_id          AS VARCHAR) || '|' ||
     CAST(pickup_location_id AS VARCHAR) || '|' ||
-    CAST(dropoff_location_id AS VARCHAR)
+    CAST(dropoff_location_id AS VARCHAR) || '|' ||
+    CAST(trip_distance AS VARCHAR) || '|' ||
+    CAST(passenger_count AS VARCHAR)
 ) AS trip_key
 ```
 
