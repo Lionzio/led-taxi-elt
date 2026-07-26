@@ -79,6 +79,21 @@ WITH regras_aplicadas AS (
             -- Regra 9: Inconsistência - Distância longa com valor baixo
             WHEN TRY_CAST(trip_distance AS DOUBLE) > 50 AND TRY_CAST(total_amount AS DOUBLE) < 10 
                 THEN 'Inconsistência: Distância longa com valor muito baixo'
+
+            -- Regra 10: Velocidade Impossível (> 70 mph)
+            WHEN TRY_CAST(trip_distance AS DOUBLE) > 0 
+                 AND DATE_DIFF('second', TRY_CAST(tpep_pickup_datetime AS TIMESTAMP), TRY_CAST(tpep_dropoff_datetime AS TIMESTAMP)) > 0
+                 AND (TRY_CAST(trip_distance AS DOUBLE) / (DATE_DIFF('second', TRY_CAST(tpep_pickup_datetime AS TIMESTAMP), TRY_CAST(tpep_dropoff_datetime AS TIMESTAMP)) / 3600.0)) > 70
+                THEN 'Velocidade impossível (> 70 mph)'
+            
+            -- Regra 11 Refinada: Gorjeta Anômala baseada em comportamento de pagamento
+            WHEN TRY_CAST(tip_amount AS DECIMAL(18,2)) > 50 
+                 OR (TRY_CAST(tip_amount AS DECIMAL(18,2)) > (TRY_CAST(fare_amount AS DECIMAL(18,2)) * 0.5) AND TRY_CAST(fare_amount AS DECIMAL(18,2)) > 20)
+                THEN 'Gorjeta anômala (> $50 ou > 50% da tarifa base)'
+            
+            -- Regra 12: Excesso de passageiros
+            WHEN TRY_CAST(passenger_count AS INTEGER) > 6
+                THEN 'Excesso de passageiros (> 6)'
             
             ELSE 'VALIDO'
         END AS rejection_reason
@@ -141,18 +156,18 @@ SELECT
     END AS payment_type_code,
     
     -- Colunas Financeiras e Taxas Complementares
-    TRY_CAST(fare_amount AS DOUBLE) AS fare_amount,
-    TRY_CAST(extra AS DOUBLE) AS extra_amount,
-    TRY_CAST(mta_tax AS DOUBLE) AS mta_tax_amount,
-    TRY_CAST(tip_amount AS DOUBLE) AS tip_amount,
-    TRY_CAST(tolls_amount AS DOUBLE) AS tolls_amount,
-    TRY_CAST(improvement_surcharge AS DOUBLE) AS improvement_surcharge_amount,
-    
+    TRY_CAST(fare_amount AS DECIMAL(18,2)) AS fare_amount,
+    TRY_CAST(extra AS DECIMAL(18,2)) AS extra_amount,
+    TRY_CAST(mta_tax AS DECIMAL(18,2)) AS mta_tax_amount,
+    TRY_CAST(tip_amount AS DECIMAL(18,2)) AS tip_amount,
+    TRY_CAST(tolls_amount AS DECIMAL(18,2)) AS tolls_amount,
+    TRY_CAST(improvement_surcharge AS DECIMAL(18,2)) AS improvement_surcharge_amount,
+
     -- Tratamento dos nulos monetários (140.162 casos) para garantir a consistência de soma
-    COALESCE(TRY_CAST(congestion_surcharge AS DOUBLE), 0.0) AS congestion_surcharge_amount,
-    COALESCE(TRY_CAST(Airport_fee AS DOUBLE), 0.0) AS airport_fee_amount,
+    COALESCE(TRY_CAST(congestion_surcharge AS DECIMAL(18,2)), 0.00) AS congestion_surcharge_amount,
+    COALESCE(TRY_CAST(Airport_fee AS DECIMAL(18,2)), 0.00) AS airport_fee_amount,
     
-    TRY_CAST(total_amount AS DOUBLE) AS total_amount
+    TRY_CAST(total_amount AS DECIMAL(18,2)) AS total_amount
 
 FROM raw_yellow_taxi
 WHERE rowid NOT IN (SELECT raw_rowid FROM rejected_records);
