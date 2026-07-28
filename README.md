@@ -83,3 +83,9 @@ Abaixo, detalhamos a evolução do pipeline e os principais *insights* técnicos
   * **Isolamento Estrutural:** As queries rodam estritamente sobre as tabelas dimensionais (Star Schema), não acessando a camada bruta. Isso garante a performance analítica e assegura o modelo como a fonte única de verdade corporativa.
   * **Uso de CTEs e Window Functions:** Lógicas complexas de cálculo foram modularizadas através de Common Table Expressions (CTEs) descritivas. Além disso, aplicamos funções de janela como `DENSE_RANK()` para elencar de forma robusta os fluxos espaciais de viagens mais volumosos na cidade (ex: mapeando grandes corredores como Aeroportos e Midtown).
   * **Métricas Acionáveis:** O script consolida os KPIs globais essenciais (ticket médio, velocidade média da operação, percentual médio de gorjeta) e fornece o cruzamento de volumetria e faturamento por faixas de horário (manhã, tarde, noite, madrugada), embasando futuras estratégias de precificação dinâmica (surge pricing) para o aplicativo U-Easy.
+
+### Sprint 8: Auditoria Final e Reprodutibilidade
+* **O que foi feito:** Criação do orquestrador mestre `run_pipeline.sql` e consolidação final da documentação técnica e arquitetural.
+* **Insights de Engenharia e Defesa:**
+  * **Orquestração Transparente e Funcional:** O script mestre foi estruturado para invocar sequencialmente todas as etapas do pipeline. Ao rodar desde a extração bruta, passando pelo perfilamento, limpeza, modelagem, até as consultas de negócio, garantimos que o processo inteiro está interligado e perfeitamente funcional do início ao fim.
+  * **Reprodutibilidade Absoluta ("Do Zero"):** O repositório foi exaustivamente testado para garantir que qualquer avaliador consiga clonar o projeto e, com um único comando, recriar todo o banco de dados analítico, validando os dados na íntegra e passando 100% nos testes de Data Quality.
