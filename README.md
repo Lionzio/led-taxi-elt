@@ -76,3 +76,10 @@ Abaixo, detalhamos a evolução do pipeline e os principais *insights* técnicos
 * **Insights de Garantia de Qualidade:**
   * Provamos através de queries de reconciliação que **Raw = Fato + Rejeições**. A query final resulta em uma diferença absoluta de `0` linhas e `0.00` dólares. Todo centavo original foi rastreado, validado ou descartado de forma justificada.
   * Testes adicionais garantem zero chaves nulas (`completude`), zero chaves duplicadas na Fato (`unicidade`) e perfeita aderência entre a fato e as dimensões (`integridade referencial`).
+
+### Sprint 7: Camada Analítica e Perguntas de Negócio
+* **O que foi feito:** Desenvolvimento da suíte de consultas analíticas (`business_queries.sql`) organizadas em quatro pilares estratégicos: Finanças, Operação, Geografia e Tempo, formatadas para consumo direto por ferramentas de BI.
+* **Insights Técnicos e de Negócio:**
+  * **Isolamento Estrutural:** As queries rodam estritamente sobre as tabelas dimensionais (Star Schema), não acessando a camada bruta. Isso garante a performance analítica e assegura o modelo como a fonte única de verdade corporativa.
+  * **Uso de CTEs e Window Functions:** Lógicas complexas de cálculo foram modularizadas através de Common Table Expressions (CTEs) descritivas. Além disso, aplicamos funções de janela como `DENSE_RANK()` para elencar de forma robusta os fluxos espaciais de viagens mais volumosos na cidade (ex: mapeando grandes corredores como Aeroportos e Midtown).
+  * **Métricas Acionáveis:** O script consolida os KPIs globais essenciais (ticket médio, velocidade média da operação, percentual médio de gorjeta) e fornece o cruzamento de volumetria e faturamento por faixas de horário (manhã, tarde, noite, madrugada), embasando futuras estratégias de precificação dinâmica (surge pricing) para o aplicativo U-Easy.
