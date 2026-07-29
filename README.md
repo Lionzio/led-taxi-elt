@@ -32,6 +32,8 @@ O fluxo de dados foi dividido logicamente e executado ao longo das seguintes Spr
 7. **Camada Analítica (S7):** Consultas OLAP de negócio para o app U-Easy.
 8. **Auditoria Final (S8):** Defesa técnica, polimento e teste do pipeline zero.
 
+O detalhamento completo das diretrizes de engenharia, regras de negócio e o cronograma estipulado para a execução dessas Sprints encontra-se documentado no [Blueprint do Projeto](https://docs.google.com/document/d/1T220TsU93qUpR3svvQnHPxQYXC1ImftarKqcpksmoD4/edit?usp=sharing).
+
 ---
 
 ## 3. Execução do Pipeline Analítico
